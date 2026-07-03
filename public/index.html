@@ -1,0 +1,1145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gama Research — DCF Workstation</title>
+<style>
+  :root{
+    --bg:#0a0e15;
+    --panel:#0e1420;
+    --panel2:#111a29;
+    --line:#1c2636;
+    --line2:#263346;
+    --ink:#c9d6e6;
+    --dim:#6d7f96;
+    --dimmer:#4a5a70;
+    --amber:#ffb020;
+    --amber-soft:#ffca6b;
+    --amber-dark:#8a5f12;
+    --up:#37d67a;
+    --down:#ff5f56;
+    --cyan:#54c7dd;
+    --violet:#9d8cff;
+    --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+    -webkit-font-smoothing:antialiased}
+  body{padding:18px;max-width:1220px;margin:0 auto;line-height:1.45}
+  .mono{font-family:var(--mono)}
+  a{color:var(--cyan)}
+
+  /* masthead */
+  .mast{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;
+    border-bottom:1px solid var(--line2);padding-bottom:12px;flex-wrap:wrap}
+  .mast h1{font-family:var(--mono);font-size:15px;font-weight:700;letter-spacing:.16em;
+    text-transform:uppercase;margin:0;color:var(--amber)}
+  .mast h1 span{color:var(--dim)}
+  .mast .sub{font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.04em;margin-top:5px}
+  .mast .rt{font-family:var(--mono);font-size:10.5px;color:var(--dimmer);text-align:right;letter-spacing:.03em;line-height:1.6}
+  .mast .rt b{color:var(--dim);font-weight:600}
+
+  /* ticker rail */
+  .rail{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0 4px}
+  .tk{font-family:var(--mono);font-size:12px;letter-spacing:.06em;padding:7px 11px;
+    background:var(--panel);border:1px solid var(--line);color:var(--dim);cursor:pointer;
+    border-radius:2px;transition:all .12s;user-select:none;position:relative}
+  .tk:hover{border-color:var(--line2);color:var(--ink)}
+  .tk.on{background:#1a1305;border-color:var(--amber);color:var(--amber)}
+  .tk small{display:block;font-family:var(--sans);font-size:8.5px;letter-spacing:.02em;
+    color:var(--dimmer);margin-top:2px;text-transform:uppercase}
+  .tk.on small{color:var(--amber-soft);opacity:.7}
+  .tk .dot{position:absolute;top:5px;right:5px;width:5px;height:5px;border-radius:50%}
+  .dot.ok{background:var(--up)} .dot.warn{background:var(--amber)} .dot.stale{background:var(--down)}
+
+  /* freshness bar */
+  .fresh{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+    margin:10px 0 0;padding:9px 14px;background:var(--panel);border:1px solid var(--line);border-radius:3px;
+    font-family:var(--mono);font-size:10.5px;color:var(--dim);letter-spacing:.03em}
+  .fresh .pill{padding:2px 9px;border-radius:10px;font-size:9.5px;letter-spacing:.1em;font-weight:600}
+  .pill.ok{background:#0c2417;color:var(--up)} .pill.warn{background:#241a06;color:var(--amber)}
+  .pill.stale{background:#2a0f0e;color:var(--down)}
+  .fresh .actions{display:flex;gap:6px;flex-wrap:wrap}
+  .btn{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+    background:var(--panel2);border:1px solid var(--line2);color:var(--dim);padding:6px 11px;
+    border-radius:2px;cursor:pointer;transition:all .12s}
+  .btn:hover{border-color:var(--amber);color:var(--amber)}
+  .btn.primary{border-color:var(--amber-dark);color:var(--amber-soft)}
+
+  .grid{display:grid;grid-template-columns:312px 1fr;gap:14px;margin-top:12px}
+  @media(max-width:860px){.grid{grid-template-columns:1fr}}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:3px}
+  .card h2{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--dim);margin:0;padding:11px 14px;border-bottom:1px solid var(--line);
+    display:flex;justify-content:space-between;align-items:center}
+  .card h2 .tag{font-size:8.5px;color:var(--dimmer);letter-spacing:.06em;text-transform:none}
+  .card .body{padding:14px}
+
+  /* inputs */
+  .fgroup{font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--amber-dark);margin:16px 0 9px;padding-bottom:4px;border-bottom:1px dashed var(--line)}
+  .fgroup:first-child{margin-top:0}
+  .field{margin-bottom:13px}
+  .field:last-child{margin-bottom:0}
+  .field label{display:flex;justify-content:space-between;align-items:baseline;
+    font-size:11px;color:var(--dim);margin-bottom:6px;letter-spacing:.02em}
+  .field label .val{font-family:var(--mono);font-size:13px;color:var(--amber)}
+  .field input[type=number]{width:100%;background:var(--panel2);border:1px solid var(--line2);
+    color:var(--ink);font-family:var(--mono);font-size:13px;padding:7px 9px;border-radius:2px;outline:none}
+  .field input[type=number]:focus{border-color:var(--amber)}
+  .field select{width:100%;background:var(--panel2);border:1px solid var(--line2);color:var(--ink);
+    font-family:var(--mono);font-size:12px;padding:7px 9px;border-radius:2px;outline:none}
+  .field .unit{font-size:9.5px;color:var(--dimmer);margin-top:3px;display:block;font-family:var(--mono)}
+  input[type=range]{width:100%;accent-color:var(--amber);background:transparent}
+  .rowbtn{display:flex;gap:8px;margin-top:14px}
+  .rowbtn .btn{flex:1}
+  .hidden{display:none!important}
+
+  /* hero */
+  .hero{padding:16px 18px 13px;border-bottom:1px solid var(--line)}
+  .hero .co{font-size:11px;color:var(--dim);margin-bottom:10px}
+  .hero .co b{color:var(--ink)}
+  .heroline{display:flex;align-items:flex-end;gap:26px;flex-wrap:wrap}
+  .metric .k{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--dimmer);margin-bottom:3px}
+  .metric .v{font-family:var(--mono);font-size:27px;font-weight:600}
+  .metric .v.iv{color:var(--amber)}
+  .metric .v.px{color:var(--ink)}
+  .metric.small .v{font-size:19px}
+  .badge{font-family:var(--mono);font-size:10px;letter-spacing:.12em;padding:5px 11px;border-radius:2px;font-weight:700}
+  .badge.up{background:#0c2417;color:var(--up)} .badge.dn{background:#2a0f0e;color:var(--down)}
+  .badge.fair{background:#241a06;color:var(--amber)}
+
+  /* breakdown strip */
+  .brk{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line);
+    border-bottom:1px solid var(--line)}
+  @media(max-width:640px){.brk{grid-template-columns:repeat(2,1fr)}}
+  .brk .cell{background:var(--panel);padding:11px 14px}
+  .brk .cell .k{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--dimmer);margin-bottom:4px}
+  .brk .cell .v{font-family:var(--mono);font-size:13.5px;color:var(--ink)}
+  .brk .cell .v small{color:var(--dim);font-size:10px}
+
+  /* reverse dcf signature */
+  .rev{margin:0;padding:15px 18px;background:linear-gradient(90deg,#12100a,#0e1420 70%);
+    border-bottom:1px solid var(--line);border-left:2px solid var(--amber)}
+  .rev .lab{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber-soft)}
+  .rev .big{font-family:var(--mono);font-size:18px;margin-top:6px;color:var(--ink)}
+  .rev .big b{color:var(--amber);font-weight:700}
+  .rev .cmp{font-size:11px;color:var(--dim);margin-top:7px;line-height:1.55}
+  .rev .cmp b{font-family:var(--mono)}
+  .rev .cmp .hot{color:var(--down)}
+  .rev .cmp .cool{color:var(--up)}
+
+  /* validation chips */
+  .checks{padding:10px 18px;border-bottom:1px solid var(--line);display:flex;gap:6px;flex-wrap:wrap}
+  .chip{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;padding:4px 9px;border-radius:2px;
+    border:1px solid var(--line2);color:var(--dim)}
+  .chip.ok{border-color:#1c4a30;color:var(--up)}
+  .chip.warn{border-color:#5a4210;color:var(--amber)}
+  .chip.err{border-color:#5a1c18;color:var(--down)}
+
+  /* note */
+  .note{padding:12px 18px;font-size:11px;color:var(--dim);line-height:1.6}
+  .note b{color:var(--amber-soft);font-weight:600}
+  .note.warn{background:#160f06}
+
+  /* tables */
+  .tblwrap{padding:14px 18px;overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11.5px}
+  th{text-align:right;color:var(--dimmer);font-weight:500;font-size:9.5px;letter-spacing:.06em;
+    text-transform:uppercase;padding:5px 8px;border-bottom:1px solid var(--line2)}
+  th:first-child{text-align:left}
+  td{text-align:right;padding:5px 8px;color:var(--ink);border-bottom:1px solid #131b28}
+  td:first-child{text-align:left;color:var(--dim)}
+  tr:hover td{background:#0d1522}
+  .proj td.pv{color:var(--amber)}
+  .proj td.fade{color:var(--cyan)}
+
+  .sens{padding:14px 18px;overflow-x:auto}
+  .sens table td,.sens table th{text-align:center;padding:6px 4px}
+  .sens td.hd{color:var(--cyan);font-size:10px;text-align:right;padding-right:8px}
+  .sens th.hd{color:var(--cyan)}
+  .sens td.cell{font-size:11px;border:1px solid #0d1522;cursor:default}
+  .sens td.base{outline:1px solid var(--amber)}
+  .corner{color:var(--dimmer);font-size:8.5px;text-align:center;line-height:1.3}
+  .sens .cap,.chartcap{font-size:10px;color:var(--dimmer);margin-top:8px;font-family:var(--sans);line-height:1.5}
+
+  /* charts */
+  .chartbox{padding:14px 18px}
+  .chartbox svg{width:100%;height:auto;display:block}
+  svg text{font-family:var(--mono)}
+
+  /* scenario table inputs */
+  .sctbl input{width:64px;background:var(--panel2);border:1px solid var(--line2);color:var(--ink);
+    font-family:var(--mono);font-size:11px;padding:4px 6px;border-radius:2px;text-align:right;outline:none}
+  .sctbl input:focus{border-color:var(--amber)}
+  .sctbl td.name{color:var(--ink);font-weight:600}
+  .exline{padding:11px 18px;border-top:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--dim)}
+  .exline b{color:var(--amber);font-size:15px}
+
+  /* monte carlo */
+  .mcgrid{display:grid;grid-template-columns:200px 1fr;gap:0}
+  @media(max-width:720px){.mcgrid{grid-template-columns:1fr}}
+  .mcgrid .settings{padding:14px;border-right:1px solid var(--line)}
+  @media(max-width:720px){.mcgrid .settings{border-right:none;border-bottom:1px solid var(--line)}}
+  .mcstats{display:flex;gap:22px;flex-wrap:wrap;padding:4px 18px 12px;font-family:var(--mono);font-size:11px;color:var(--dim)}
+  .mcstats b{color:var(--ink);font-size:13px;display:block;margin-top:2px}
+  .mcstats .pgood b{color:var(--up)}
+
+  .split2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+  @media(max-width:860px){.split2{grid-template-columns:1fr}}
+
+  .foot{margin-top:16px;padding-top:12px;border-top:1px solid var(--line);
+    font-size:10.5px;color:var(--dimmer);line-height:1.65}
+  .foot b{color:var(--dim)}
+  details.info{padding:0 2px}
+  details.info summary{cursor:pointer;font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--dim);padding:10px 0;list-style:none}
+  details.info summary::-webkit-details-marker{display:none}
+  details.info summary:before{content:"▸ ";color:var(--amber)}
+  details.info[open] summary:before{content:"▾ "}
+  details.info p{font-size:11px;color:var(--dim);line-height:1.65;margin:4px 0 10px}
+  details.info p b{color:var(--amber-soft)}
+</style>
+</head>
+<body>
+
+<div class="mast">
+  <div>
+    <h1>Gama Research <span>// DCF Workstation</span></h1>
+    <div class="sub">Rotas longas, retornos compostos. · Three-stage DCF · reverse DCF · Monte Carlo · live quotes</div>
+  </div>
+  <div class="rt">
+    <b>FY2025 fundamental anchors</b> · prices live via ↻ (10-min server cache)<br>
+    10 operating holdings · ETFs &amp; gold excluded (no single-entity cash flows)<br>
+    Not investment advice · a reasoning tool, not an oracle
+  </div>
+</div>
+
+<div class="rail" id="rail"></div>
+
+<div class="fresh">
+  <div id="fr_txt">—</div>
+  <div class="actions">
+    <span id="sync" style="color:var(--dimmer)">connecting…</span>
+    <span class="pill" id="fr_pill">—</span>
+    <button class="btn primary" id="quotesBtn">↻ Live prices</button>
+    <button class="btn" id="fr_btn">Price updated → today</button>
+    <button class="btn" id="exportBtn">Export state</button>
+    <button class="btn" id="importBtn">Import state</button>
+    <input type="file" id="importFile" accept="application/json" style="display:none">
+  </div>
+</div>
+
+<div class="grid">
+
+  <!-- INPUTS -->
+  <div class="card">
+    <h2>Assumptions <span class="tag" id="dirty"></span></h2>
+    <div class="body">
+
+      <div class="fgroup">Cash flow engine</div>
+      <div class="field">
+        <label>Base free cash flow <span class="val"><span id="v_fcf"></span></span></label>
+        <input type="number" id="fcf" step="10"><span class="unit" id="u_fcf"></span>
+      </div>
+      <div class="field">
+        <label>Normalisation haircut <span class="val" id="v_hair"></span></label>
+        <input type="range" id="hair" min="0" max="30" step="1">
+        <span class="unit">trims base FCF for SBC / one-offs / lumpy capex</span>
+      </div>
+
+      <div class="fgroup">Growth profile</div>
+      <div class="field">
+        <label>Stage-1 FCF growth <span class="val" id="v_g1"></span></label>
+        <input type="range" id="g1" min="-10" max="30" step="0.5">
+      </div>
+      <div class="field">
+        <label>Stage-1 horizon <span class="val" id="v_n1"></span></label>
+        <input type="range" id="n1" min="3" max="15" step="1">
+      </div>
+      <div class="field">
+        <label>Fade stage (→ g∞) <span class="val" id="v_nf"></span></label>
+        <input type="range" id="nf" min="0" max="15" step="1">
+        <span class="unit">growth glides linearly to terminal · 0 = classic two-stage</span>
+      </div>
+      <div class="field">
+        <label>Terminal growth (g∞) <span class="val" id="v_gt"></span></label>
+        <input type="range" id="gt" min="0" max="5" step="0.25">
+      </div>
+
+      <div class="fgroup">Discounting &amp; terminal value</div>
+      <div class="field">
+        <label>Discount rate (r) <span class="val" id="v_r"></span></label>
+        <input type="range" id="r" min="5" max="15" step="0.25">
+      </div>
+      <div class="field">
+        <label>Terminal method</label>
+        <select id="tvmode">
+          <option value="gordon">Gordon growth — FCF×(1+g∞)/(r−g∞)</option>
+          <option value="exit">Exit multiple — FCF × multiple</option>
+        </select>
+      </div>
+      <div class="field" id="exitwrap">
+        <label>Exit multiple (× FCF) <span class="val" id="v_exitm"></span></label>
+        <input type="range" id="exitm" min="5" max="40" step="0.5">
+      </div>
+
+      <div class="fgroup">Capital structure</div>
+      <div class="field">
+        <label>Shares outstanding <span class="val"><span id="v_sh"></span>M</span></label>
+        <input type="number" id="sh" step="1">
+      </div>
+      <div class="field">
+        <label>Share-count drift <span class="val" id="v_ds"></span></label>
+        <input type="range" id="ds" min="-4" max="4" step="0.25">
+        <span class="unit">negative = net buybacks accreting FCF/share · positive = dilution</span>
+      </div>
+      <div class="field">
+        <label>Net cash / (debt) <span class="val"><span id="v_nc"></span></span></label>
+        <input type="number" id="nc" step="10"><span class="unit">millions · optional, default 0</span>
+      </div>
+
+      <div class="fgroup">Market &amp; discipline</div>
+      <div class="field">
+        <label>Current price <span class="val" id="v_px"></span></label>
+        <input type="number" id="px" step="0.5">
+      </div>
+      <div class="field">
+        <label>Margin of safety <span class="val" id="v_mos"></span></label>
+        <input type="range" id="mos" min="0" max="50" step="5">
+      </div>
+
+      <div class="rowbtn">
+        <button class="btn" id="reset">Reset ticker</button>
+        <button class="btn" id="resetAll">Reset all</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OUTPUTS -->
+  <div class="card" style="padding:0">
+    <div class="hero">
+      <div class="co">Valuing <b id="h_name"></b> · <span id="h_cur"></span> · owner FCF per share, discounted at your required return</div>
+      <div class="heroline">
+        <div class="metric"><div class="k">Intrinsic / share</div><div class="v iv" id="o_iv"></div></div>
+        <div class="metric"><div class="k">Current price</div><div class="v px" id="o_px"></div></div>
+        <div class="metric small"><div class="k">Upside / downside</div><div class="v" id="o_ud"></div></div>
+        <div class="metric small"><div class="k">Buy below (MoS)</div><div class="v" id="o_buy" style="color:var(--up)"></div></div>
+        <div class="badge" id="o_badge"></div>
+      </div>
+    </div>
+
+    <div class="brk">
+      <div class="cell"><div class="k">PV explicit FCF /sh</div><div class="v" id="o_pve"></div></div>
+      <div class="cell"><div class="k">PV terminal /sh</div><div class="v" id="o_pvt"></div></div>
+      <div class="cell"><div class="k">Net cash /sh</div><div class="v" id="o_nc"></div></div>
+      <div class="cell"><div class="k">Value in terminal</div><div class="v" id="o_tvpct"></div></div>
+      <div class="cell"><div class="k">Implied exit multiple</div><div class="v" id="o_iem"></div></div>
+    </div>
+
+    <div class="rev">
+      <div class="lab">◆ Reverse DCF — what the price is pricing in</div>
+      <div class="big" id="rv_big"></div>
+      <div class="cmp" id="rv_cmp"></div>
+    </div>
+
+    <div class="checks" id="checks"></div>
+
+    <div class="note warn" id="o_note"></div>
+
+    <div class="chartbox">
+      <svg id="ch_wf" viewBox="0 0 720 218" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="chartcap">Value bridge, per share: explicit-stage PV + terminal PV + net cash = intrinsic value, against the market price.</div>
+    </div>
+  </div>
+</div>
+
+<!-- FCF PROJECTION + FOOTBALL FIELD -->
+<div class="split2">
+  <div class="card">
+    <h2>Cash flow projection <span class="tag">nominal vs present value · fade stage in cyan</span></h2>
+    <div class="chartbox">
+      <svg id="ch_fcf" viewBox="0 0 560 240" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="chartcap">Grey bars: projected FCF/share. Amber core: its present value — what you're actually paying for. The gap between them is the price of time and risk.</div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Valuation football field <span class="tag">every lens on one axis</span></h2>
+    <div class="chartbox">
+      <svg id="ch_ff" viewBox="0 0 560 240" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="chartcap">Ranges from the sensitivity grid, scenario weighting, Monte Carlo (p10–p90) and both terminal methods. Red line: market price. Green dashes: your buy-below price.</div>
+    </div>
+  </div>
+</div>
+
+<!-- MONTE CARLO -->
+<div class="card" style="margin-top:14px">
+  <h2>Monte Carlo — 4,000 simulations <span class="tag">triangular uncertainty around your inputs</span></h2>
+  <div class="mcgrid">
+    <div class="settings">
+      <div class="field">
+        <label>Base FCF ± <span class="val" id="v_mcf"></span></label>
+        <input type="range" id="mc_dfcf" min="0" max="30" step="1">
+      </div>
+      <div class="field">
+        <label>Stage-1 growth ± <span class="val" id="v_mg1"></span></label>
+        <input type="range" id="mc_dg1" min="0" max="10" step="0.5">
+      </div>
+      <div class="field">
+        <label>Terminal growth ± <span class="val" id="v_mgt"></span></label>
+        <input type="range" id="mc_dgt" min="0" max="2" step="0.25">
+      </div>
+      <div class="field">
+        <label>Discount rate ± <span class="val" id="v_mr"></span></label>
+        <input type="range" id="mc_dr" min="0" max="3" step="0.25">
+      </div>
+    </div>
+    <div>
+      <div class="chartbox" style="padding-bottom:6px">
+        <svg id="ch_mc" viewBox="0 0 720 200" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+      <div class="mcstats" id="mc_stats"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SCENARIOS + SENSITIVITY -->
+<div class="split2">
+  <div class="card">
+    <h2>Scenario weighting <span class="tag">deltas vs your base inputs</span></h2>
+    <div class="tblwrap">
+      <table class="sctbl">
+        <thead><tr><th>Scenario</th><th>Δ stage-1 g (pp)</th><th>Δ g∞ (pp)</th><th>Prob %</th><th>IV / share</th></tr></thead>
+        <tbody id="sctb"></tbody>
+      </table>
+    </div>
+    <div class="exline">Probability-weighted intrinsic value: <b id="sc_ev">—</b> <span id="sc_evud"></span></div>
+  </div>
+  <div class="card">
+    <h2>Sensitivity — intrinsic / share <span class="tag">r × g∞ · base cell outlined</span></h2>
+    <div class="sens">
+      <table><tbody id="sens"></tbody></table>
+      <div class="cap">Green cells clear your margin of safety at the current price; dark green trade above price; red trade below. If the verdict flips within ±0.5pp of your assumptions, you don't have a verdict.</div>
+    </div>
+  </div>
+</div>
+
+<!-- PROJECTION TABLE -->
+<div class="card" style="margin-top:14px">
+  <h2>Projection detail <span class="tag">per-share stream · fade years marked</span></h2>
+  <div class="tblwrap">
+    <table class="proj">
+      <thead><tr><th>Yr</th><th>Growth</th><th>FCF (agg)</th><th>Shares M</th><th>FCF / share</th><th>Discount ×</th><th>PV / share</th></tr></thead>
+      <tbody id="proj"></tbody>
+    </table>
+  </div>
+</div>
+
+<details class="info" style="margin-top:14px">
+  <summary>Methodology, data hygiene &amp; honest limitations</summary>
+  <p><b>The model.</b> Three-stage owner-earnings DCF per share: an explicit stage at your growth rate, an optional fade stage where growth glides linearly to g∞ (set fade to 0 for the classic two-stage), and a terminal value by Gordon growth or exit multiple. Share-count drift converts company FCF into FCF <i>per share</i>, so buybacks accrete and dilution costs you — the quantity Buffett actually talks about.</p>
+  <p><b>The point estimate is the least important number on this page.</b> The sensitivity grid, scenarios and Monte Carlo exist because the honest output of a DCF is a <i>range</i>. If the range comfortably straddles the price, the correct action is usually nothing.</p>
+  <p><b>Reverse DCF is the honest lens.</b> The strip solves for the stage-1 growth the current price already assumes, holding your r and g∞ fixed. If that implied growth looks easy for the business, the market is cautious; if it looks heroic, the market is optimistic. Audit the price — don't manufacture one.</p>
+  <p><b>Data hygiene (why the freshness pill still exists).</b> Prices refresh live via the server (↻ button, 10-minute cache). But prices were never the real staleness risk — <i>fundamental anchors</i> are: base FCF, shares outstanding and net cash only update when you read the filing. The pill tracks price age; the quarterly routine is unchanged: after each earnings report, refresh FCF / shares / net cash from the filing. Fundamentals are FY2025 reported figures unless noted. Quotes come from an unofficial public endpoint — if it ever breaks, the workstation degrades gracefully to manual prices.</p>
+  <p><b>Known distortions in the anchors.</b> SPGI's base FCF carries a provisional ~13% trim for the Mobility spin (completed 2026-07-01) — overwrite it with the recast figures published 2026-07-06. Novo, AENA and Saab have capex-depressed or lumpy FCF; normalise before trusting the output. Nestlé's FY2025 FCF was flattered by a one-off distribution.</p>
+</details>
+
+<div class="foot">
+  <b>Not covered by DCF:</b> VUAA (S&amp;P 500 UCITS ETF) and VWCE (FTSE All-World UCITS ETF) are diversified baskets — value them by aggregate market multiples, not a single-entity DCF. Xetra-Gold generates no cash flow, so a DCF is undefined; gold is priced on scarcity and monetary demand.<br>
+  <b>Portuguese CGT is 28% flat</b> — intrinsic-value gaps only matter after tax and only if you'd actually transact; low turnover stays structurally correct.
+</div>
+
+<script>
+"use strict";
+/* ============================ DATA ============================ */
+const COMPANIES = [
+  {t:"GE",  name:"GE Aerospace",       cur:"USD", fcf:7600,  sh:1070, px:375,  g1:12, pxAsOf:"2026-07-03", note:"<b>Cyclical, not smooth.</b> Aerospace FCF swings with the cycle; the base is strong (record 2025) and management guides to ~$10B operating profit in 2026, two years early. Price refreshed 2026-07-03 near record highs after analyst upgrades — a single g∞/r point estimate flatters a cyclical, so lean on the sensitivity grid and reverse DCF: at these levels the implied growth is the story."},
+  {t:"V",   name:"Visa",              cur:"USD", fcf:21600, sh:2000, px:330,  g1:11, pxAsOf:"2026-02-15", note:"<b>Cleanest DCF candidate you own.</b> Asset-light toll-booth, ~50% net margin, minimal capex, steady buybacks. Try −1.5% share drift to model the buyback: FCF per share is what compounds here. The debate is durability of g∞, not FCF quality."},
+  {t:"SPGI",name:"S&P Global",        cur:"USD", fcf:4800,  sh:305,  px:414,  g1:8,  pxAsOf:"2026-07-03", note:"<b>Post-spin RemainCo — provisional anchors.</b> The Mobility spin (MBGL) completed 2026-07-01, 1-for-1; the base FCF here carries a provisional ~13% trim for the divested division. S&P Global publishes recast FY2025 and Q1-2026 financials on 2026-07-06 — overwrite base FCF, shares and net cash with those figures before trusting the output. Wide-moat, high-incremental-margin compounder otherwise well suited to DCF."},
+  {t:"WM",  name:"Waste Management",   cur:"USD", fcf:2940, sh:403,  px:223,  g1:10, pxAsOf:"2026-07-03", note:"<b>Don't extrapolate the 2026 ~30% FCF jump.</b> That step is the Stericycle/healthcare + sustainability capex cycle converting, not a durable growth rate. Use a normalised high-single/low-double stage-1 with a fade — the moat (unreplicable landfill network) supports a solid g∞. Q2 earnings land 2026-07-28: refresh anchors after."},
+  {t:"BSX", name:"Boston Scientific",  cur:"USD", fcf:3659, sh:1494, px:76,   g1:12, pxAsOf:"2026-02-15", note:"<b>Growth medtech, priced for it.</b> FCF surged 38% in 2025 on 15.8% organic growth; the Feb-2026 selloff was an EP-growth-miss overreaction. Penumbra adds debt (enter it in net cash/(debt) as negative). High implied growth here is the market extrapolating the compounding — watch the CHAMPION/WATCHMAN readout."},
+  {t:"NESN",name:"Nestlé",            cur:"CHF", fcf:9200, sh:2570, px:79,   g1:4,  pxAsOf:"2026-02-15", note:"<b>Defensive, mid-turnaround.</b> FY2025 FCF was flattered by a ~CHF 2B one-off Froneri distribution — use the normalisation haircut (~15–20%) for a recurring base of CHF 7–8B. Low-growth staple: g∞ does most of the work, so the terminal assumption dominates — check the 'value in terminal' cell."},
+  {t:"DG",  name:"Vinci",             cur:"EUR", fcf:7000, sh:588,  px:122,  g1:5,  pxAsOf:"2026-02-15", note:"<b>Two businesses in one.</b> Concessions (airports/motorways) are annuity-like and DCF-friendly; construction is cyclical and lumpy. Record 2025 FCF partly reflects better cash collection — a modest haircut is honest. A blended mid-single stage-1 with a moderate g∞ fits the concession-weighted mix."},
+  {t:"AENA",name:"AENA",              cur:"EUR", fcf:1700, sh:1500, px:27,   g1:4,  pxAsOf:"2026-02-15", note:"<b>Heavy capex cycle distorts FCF.</b> DORA III (2027–31) carries ~€10B regulated capex — near-term FCF will run well below normalised earnings power (net income ~€2.1B vs ~€1.7B FCF). Regulated-return airport monopoly: a naïve FCF-DCF understates it. Model the capex years as a fade stage, or value on the regulated asset base."},
+  {t:"NVO", name:"Novo Nordisk",       cur:"DKK", fcf:28300,sh:4450, px:320,  g1:5,  pxAsOf:"2026-02-15", note:"<b>Your value/recovery bet — FCF is the wrong single anchor.</b> Peak capex (DKK ~60B in 2025) crushed reported FCF; 2026 guide is DKK 35–45B with capex declining, and net income is DKK 102B. The real variable is GLP-1 durability (semaglutide patent cliffs from 2026, US MFP pricing from 2027, CagriSema). Model that as a wide Monte Carlo band on growth, and cross-check against net income."},
+  {t:"SAAB",name:"Saab",             cur:"SEK", fcf:4210, sh:538,  px:500,  g1:12, pxAsOf:"2026-02-15", note:"<b>Lumpy, milestone-driven FCF.</b> FY2025 FCF (SEK 4.2B) was helped by milestone timing + a TransponderTech disposal, against net income of SEK 6.5B, while capacity expansion runs hard. Order backlog SEK 274B supports high stage-1 growth, but the stock carries a large premium to peers — the reverse DCF will show heroic implied growth. Use net income as a sanity check."}
+];
+
+const CUR = {
+  USD:{s:"$"}, EUR:{s:"€"}, CHF:{s:"CHF "}, DKK:{s:"DKK "}, SEK:{s:"SEK "}
+};
+const D = {n1:10, nf:5, gt:2.5, r:9, hair:0, ds:0, mos:25, tvmode:"gordon", exitm:18,
+           mc_dfcf:10, mc_dg1:3, mc_dgt:0.5, mc_dr:1};
+const SC_DEF = [
+  {name:"Bear", dg1:-4, dgt:-0.5, p:25},
+  {name:"Base", dg1:0,  dgt:0,    p:50},
+  {name:"Bull", dg1:3,  dgt:0.5,  p:25}
+];
+
+let cur = 0;
+let store = {};       // per-ticker saved inputs
+let scen = SC_DEF.map(s=>({...s}));
+let mcResult = null;
+let mcTimer = null;
+
+/* ============================ HELPERS ============================ */
+function g(id){return document.getElementById(id);}
+function fmtCur(v, c, dp=2){
+  const m = CUR[c]; const neg = v<0; const a = Math.abs(v);
+  const num = a.toLocaleString("en-US",{minimumFractionDigits:dp,maximumFractionDigits:dp});
+  return (neg?"−":"") + m.s + num;
+}
+function fmtB(vM, c, dp=2){ return fmtCur(vM/1000, c, dp) + "B"; }
+function pct(x,dp=1){ return (x>=0?"+":"") + x.toFixed(dp) + "%"; }
+function esc(s){ return String(s); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function daysSince(iso){
+  const d = new Date(iso+"T00:00:00");
+  if(isNaN(d)) return 9999;
+  return Math.max(0, Math.round((Date.now()-d.getTime())/86400000));
+}
+
+/* ============================ MODEL CORE ============================ */
+function growthPath(p){
+  const arr=[];
+  for(let t=1;t<=p.n1;t++) arr.push(p.g1);
+  for(let k=1;k<=p.nf;k++) arr.push(p.g1 + (p.gt-p.g1)*k/(p.nf+1));
+  return arr;
+}
+function model(p){
+  const gp = growthPath(p);
+  const N = gp.length;
+  let f = p.fcf*(1-p.hair);
+  let sh = p.sh;
+  let pvE=0; const rows=[];
+  for(let t=1;t<=N;t++){
+    f *= (1+gp[t-1]);
+    sh *= (1+p.ds);
+    const fps = f/sh;
+    const df = Math.pow(1+p.r,-t);
+    const pv = fps*df;
+    pvE += pv;
+    rows.push({t, g:gp[t-1], f, sh, fps, df, pv, fade:t>p.n1});
+  }
+  const lastFps = rows[N-1].fps;
+  let valid=true, tvps=0;
+  if(p.tvmode==="exit"){
+    tvps = lastFps*p.exitm;
+  } else {
+    if(p.r<=p.gt) valid=false;
+    else tvps = lastFps*(1+p.gt)/(p.r-p.gt);
+  }
+  const pvT = valid ? tvps*Math.pow(1+p.r,-N) : NaN;
+  const ncps = p.nc/p.sh;
+  const ivps = valid ? pvE+pvT+ncps : NaN;
+  return {rows, N, pvE, pvT, ncps, ivps, valid,
+          impliedExit: p.r>p.gt ? (1+p.gt)/(p.r-p.gt) : Infinity};
+}
+function impliedG1(p){
+  if(p.tvmode==="gordon" && p.r<=p.gt) return null;
+  let lo=-0.5, hi=1.0;
+  for(let i=0;i<90;i++){
+    const mid=(lo+hi)/2;
+    const ps = model({...p, g1:mid}).ivps;
+    if(ps < p.px) lo=mid; else hi=mid;
+  }
+  return (lo+hi)/2;
+}
+
+/* ============================ INPUT PLUMBING ============================ */
+const INPUT_IDS = ["fcf","hair","g1","n1","nf","gt","r","tvmode","exitm","sh","ds","nc","px","mos",
+                   "mc_dfcf","mc_dg1","mc_dgt","mc_dr"];
+function readInputs(){
+  return {
+    fcf:+g("fcf").value, hair:+g("hair").value/100,
+    g1:+g("g1").value/100, n1:+g("n1").value, nf:+g("nf").value,
+    gt:+g("gt").value/100, r:+g("r").value/100,
+    tvmode:g("tvmode").value, exitm:+g("exitm").value,
+    sh:+g("sh").value, ds:+g("ds").value/100, nc:+g("nc").value,
+    px:+g("px").value, mos:+g("mos").value/100,
+    mc:{dfcf:+g("mc_dfcf").value/100, dg1:+g("mc_dg1").value/100,
+        dgt:+g("mc_dgt").value/100, dr:+g("mc_dr").value/100},
+    c:COMPANIES[cur].cur
+  };
+}
+function snapshot(){
+  const o={};
+  INPUT_IDS.forEach(id=>o[id]=g(id).value);
+  return o;
+}
+function applySnapshot(o){
+  INPUT_IDS.forEach(id=>{ if(o && o[id]!==undefined) g(id).value=o[id]; });
+}
+function saveCurrent(){
+  const C=COMPANIES[cur];
+  store[C.t] = {inputs:snapshot(), pxAsOf:C.pxAsOf};
+  persist();
+}
+
+/* ============================ PERSISTENCE (server + Supabase) ============================ */
+let persistTimer=null;
+let apiKey=(new URLSearchParams(location.search)).get("key")||"";
+try{
+  if(apiKey) localStorage.setItem("mcos-key",apiKey);
+  else apiKey=localStorage.getItem("mcos-key")||"";
+}catch(e){/* storage blocked — key lives for this tab only */}
+function hdrs(){
+  const h={"Content-Type":"application/json"};
+  if(apiKey) h["x-workstation-key"]=apiKey;
+  return h;
+}
+function setSync(t){ const el=g("sync"); if(el) el.textContent=t; }
+function persist(){
+  clearTimeout(persistTimer);
+  persistTimer=setTimeout(async()=>{
+    try{
+      const res=await fetch("/api/state",{method:"PUT",headers:hdrs(),body:JSON.stringify({store,scen})});
+      setSync(res.ok?"✓ saved "+new Date().toLocaleTimeString():"⚠ save failed ("+res.status+")");
+    }catch(e){ setSync("⚠ offline — changes not saved"); }
+  },800);
+}
+async function restore(){
+  try{
+    const res=await fetch("/api/state",{headers:hdrs()});
+    if(res.ok){
+      const d=await res.json();
+      if(d&&d.store) store=d.store;
+      if(d&&d.scen&&d.scen.length===3) scen=d.scen;
+      COMPANIES.forEach(C=>{
+        if(store[C.t]&&store[C.t].pxAsOf) C.pxAsOf=store[C.t].pxAsOf;
+      });
+      setSync("state loaded");
+    } else setSync(res.status===401?"⚠ wrong key — append ?key=… to the URL":"no saved state yet");
+  }catch(e){ setSync("⚠ offline — running on anchors"); }
+}
+async function fetchQuotes(){
+  const btn=g("quotesBtn");
+  btn.disabled=true; btn.textContent="↻ fetching…";
+  try{
+    const res=await fetch("/api/quotes",{headers:hdrs()});
+    if(!res.ok) throw new Error("HTTP "+res.status);
+    const q=await res.json();
+    let n=0;
+    COMPANIES.forEach(C=>{
+      const it=q[C.t];
+      if(it&&isFinite(it.price)&&it.price>0){
+        C.px=Math.round(it.price*100)/100;
+        C.pxAsOf=(it.asOf||todayStr()).slice(0,10);
+        if(store[C.t]&&store[C.t].inputs){
+          store[C.t].inputs.px=C.px;
+          store[C.t].pxAsOf=C.pxAsOf;
+        }
+        n++;
+      }
+    });
+    persist();
+    loadCompany(cur,true);
+    setSync(n+"/"+COMPANIES.length+" live quotes · "+new Date().toLocaleTimeString());
+  }catch(e){ setSync("⚠ quote refresh failed"); }
+  btn.disabled=false; btn.textContent="↻ Live prices";
+}
+
+/* ============================ SVG HELPERS ============================ */
+function svgLine(x1,y1,x2,y2,stroke,w,dash){
+  return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${stroke}" stroke-width="${w||1}"${dash?` stroke-dasharray="${dash}"`:""}/>`;
+}
+function svgRect(x,y,w,h,fill,opts){
+  return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(0,w).toFixed(1)}" height="${Math.max(0,h).toFixed(1)}" fill="${fill}"${opts||""}/>`;
+}
+function svgText(x,y,txt,size,fill,anchor){
+  return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" font-size="${size}" fill="${fill}" text-anchor="${anchor||"start"}">${esc(txt)}</text>`;
+}
+function niceTicks(lo,hi,n){
+  const span=hi-lo; if(span<=0) return [lo];
+  const step0=span/n, mag=Math.pow(10,Math.floor(Math.log10(step0)));
+  const norm=step0/mag;
+  const step=(norm<1.5?1:norm<3.5?2:norm<7.5?5:10)*mag;
+  const ticks=[]; let v=Math.ceil(lo/step)*step;
+  for(;v<=hi+1e-9;v+=step) ticks.push(v);
+  return ticks;
+}
+
+/* ============================ CHARTS ============================ */
+function drawFcfChart(p,out){
+  const W=560,H=240,padL=52,padR=10,padT=14,padB=26;
+  const rows=out.rows;
+  const maxV=Math.max(...rows.map(r=>r.fps))*1.08;
+  const iw=(W-padL-padR)/rows.length;
+  const bw=Math.max(3,iw*0.62);
+  const y=v=>padT+(H-padT-padB)*(1-v/maxV);
+  let s="";
+  niceTicks(0,maxV,4).forEach(tv=>{
+    s+=svgLine(padL,y(tv),W-padR,y(tv),"#131b28",1);
+    s+=svgText(padL-6,y(tv)+3,fmtCur(tv,p.c,tv<10?1:0),9,"#4a5a70","end");
+  });
+  rows.forEach((rw,i)=>{
+    const x=padL+i*iw+(iw-bw)/2;
+    const nomFill=rw.fade?"#12303a":"#1a2231";
+    s+=svgRect(x,y(rw.fps),bw,H-padB-y(rw.fps),nomFill);
+    s+=svgRect(x,y(rw.pv),bw,H-padB-y(rw.pv),rw.fade?"#2b7f95":"#ffb020",` opacity="${rw.fade?0.9:0.85}"`);
+    if(rows.length<=15 || i%2===1)
+      s+=svgText(x+bw/2,H-padB+13,String(rw.t),8.5,"#4a5a70","middle");
+  });
+  s+=svgLine(padL,H-padB,W-padR,H-padB,"#263346",1);
+  s+=svgText(padL,padT-3,"FCF / share — nominal (grey) vs PV (amber) · fade stage cyan",9,"#6d7f96");
+  g("ch_fcf").innerHTML=s;
+}
+
+function drawWaterfall(p,out){
+  const W=720,H=218,padL=56,padR=14,padT=16,padB=30;
+  if(!out.valid){ g("ch_wf").innerHTML=svgText(W/2,H/2,"r must exceed g∞ for a finite terminal value",11,"#ff5f56","middle"); return; }
+  const steps=[
+    {k:"PV explicit",  v:out.pvE,  fill:"#ffb020"},
+    {k:"PV terminal",  v:out.pvT,  fill:"#8a5f12"},
+    {k:"Net cash",     v:out.ncps, fill:"#54c7dd"},
+    {k:"Intrinsic",    v:out.ivps, fill:"#37d67a", total:true},
+    {k:"Price",        v:p.px,     fill:"#3a4658", total:true}
+  ];
+  const maxV=Math.max(out.ivps,p.px,out.pvE+Math.max(0,out.pvT)+Math.max(0,out.ncps))*1.1;
+  const minV=Math.min(0,out.ncps<0?out.ivps:0);
+  const y=v=>padT+(H-padT-padB)*(1-(v-minV)/(maxV-minV));
+  const iw=(W-padL-padR)/steps.length, bw=iw*0.52;
+  let s="";
+  niceTicks(Math.min(0,minV),maxV,4).forEach(tv=>{
+    s+=svgLine(padL,y(tv),W-padR,y(tv),"#131b28",1);
+    s+=svgText(padL-6,y(tv)+3,fmtCur(tv,p.c,0),9,"#4a5a70","end");
+  });
+  let cum=0;
+  steps.forEach((st,i)=>{
+    const x=padL+i*iw+(iw-bw)/2;
+    let y0,y1;
+    if(st.total){ y0=y(Math.max(0,st.v)); y1=y(Math.min(0,st.v)); }
+    else{
+      const a=cum, b=cum+st.v;
+      y0=y(Math.max(a,b)); y1=y(Math.min(a,b));
+      cum=b;
+      if(i<2){ // connector to next float
+        s+=svgLine(x+bw,y(cum),x+iw+ (iw-bw)/2, y(cum),"#263346",1,"3,3");
+      } else {
+        s+=svgLine(x+bw,y(cum),x+iw+(iw-bw)/2,y(cum),"#263346",1,"3,3");
+      }
+    }
+    s+=svgRect(x,y0,bw,Math.max(1.5,y1-y0),st.fill,` opacity="0.9"`);
+    s+=svgText(x+bw/2,y0-5,fmtCur(st.v,p.c,st.v<10?2:1),9.5,"#c9d6e6","middle");
+    s+=svgText(x+bw/2,H-padB+14,st.k,9,"#6d7f96","middle");
+  });
+  s+=svgLine(padL,y(0),W-padR,y(0),"#263346",1);
+  // price vs IV delta marker
+  g("ch_wf").innerHTML=s;
+}
+
+function drawFootballField(p,base,sensSpan,scenSpan){
+  const W=560,H=240,padL=128,padR=16,padT=14,padB=26;
+  const bars=[];
+  if(sensSpan) bars.push({k:"Sensitivity grid", lo:sensSpan[0], hi:sensSpan[1], mid:base.ivps, fill:"#8a5f12"});
+  if(scenSpan) bars.push({k:"Scenarios (bear→bull)", lo:scenSpan[0], hi:scenSpan[1], mid:scenSpan[2], fill:"#9d8cff"});
+  if(mcResult) bars.push({k:"Monte Carlo p10–p90", lo:mcResult.p10, hi:mcResult.p90, mid:mcResult.p50, fill:"#54c7dd"});
+  // terminal method cross-check
+  const alt = model({...p, tvmode:p.tvmode==="gordon"?"exit":"gordon"});
+  if(base.valid && alt.valid && isFinite(alt.ivps)){
+    bars.push({k:"Gordon vs exit multiple", lo:Math.min(base.ivps,alt.ivps), hi:Math.max(base.ivps,alt.ivps), mid:null, fill:"#3a4658"});
+  }
+  if(!bars.length || !base.valid){ g("ch_ff").innerHTML=svgText(W/2,H/2,"awaiting valid model",10,"#4a5a70","middle"); return; }
+  const buy = base.ivps*(1-p.mos);
+  let lo=Math.min(p.px,buy,...bars.map(b=>b.lo)), hi=Math.max(p.px,...bars.map(b=>b.hi));
+  const pad=(hi-lo)*0.08||1; lo-=pad; hi+=pad;
+  const x=v=>padL+(W-padL-padR)*(v-lo)/(hi-lo);
+  let s="";
+  niceTicks(lo,hi,5).forEach(tv=>{
+    s+=svgLine(x(tv),padT,x(tv),H-padB,"#131b28",1);
+    s+=svgText(x(tv),H-padB+13,fmtCur(tv,p.c,0),8.5,"#4a5a70","middle");
+  });
+  const rowH=(H-padT-padB)/bars.length;
+  bars.forEach((b,i)=>{
+    const yc=padT+rowH*(i+0.5);
+    s+=svgText(padL-8,yc+3,b.k,9,"#6d7f96","end");
+    s+=svgRect(x(b.lo),yc-8,Math.max(2,x(b.hi)-x(b.lo)),16,b.fill,` opacity="0.65" rx="2"`);
+    if(b.mid!==null && isFinite(b.mid))
+      s+=svgLine(x(b.mid),yc-10,x(b.mid),yc+10,"#ffca6b",2);
+  });
+  s+=svgLine(x(p.px),padT-2,x(p.px),H-padB,"#ff5f56",1.6);
+  s+=svgText(x(p.px)+4,padT+8,"price",8.5,"#ff5f56");
+  s+=svgLine(x(buy),padT-2,x(buy),H-padB,"#37d67a",1.4,"4,3");
+  s+=svgText(x(buy)+4,padT+18,"buy ≤",8.5,"#37d67a");
+  g("ch_ff").innerHTML=s;
+}
+
+function drawMonteCarlo(p){
+  const svg=g("ch_mc"), stats=g("mc_stats");
+  if(!mcResult){ svg.innerHTML=svgText(360,100,"running…",10,"#4a5a70","middle"); stats.innerHTML=""; return; }
+  const {hist,binLo,binW,p10,p50,p90,probUV,probMoS,n}=mcResult;
+  const W=720,H=200,padL=14,padR=14,padT=12,padB=24;
+  const maxC=Math.max(...hist,1);
+  const lo=binLo, hi=binLo+binW*hist.length;
+  const x=v=>padL+(W-padL-padR)*(v-lo)/(hi-lo);
+  const bw=(W-padL-padR)/hist.length;
+  let s="";
+  hist.forEach((c,i)=>{
+    const bx=padL+i*bw;
+    const bh=(H-padT-padB)*(c/maxC);
+    const mid=binLo+binW*(i+0.5);
+    const fill = mid>=p.px ? "#1d5c38" : "#5c221f";
+    s+=svgRect(bx+0.5,H-padB-bh,bw-1,bh,fill,` opacity="0.9"`);
+  });
+  s+=svgLine(padL,H-padB,W-padR,H-padB,"#263346",1);
+  [[p10,"p10"],[p50,"median"],[p90,"p90"]].forEach(([v,l])=>{
+    s+=svgLine(x(v),padT,x(v),H-padB,"#ffca6b",1,"3,3");
+    s+=svgText(x(v),padT-2,l,8.5,"#ffca6b","middle");
+  });
+  if(p.px>=lo&&p.px<=hi){
+    s+=svgLine(x(p.px),padT,x(p.px),H-padB,"#ff5f56",1.6);
+    s+=svgText(x(p.px)+4,H-padB-6,"price",8.5,"#ff5f56");
+  }
+  niceTicks(lo,hi,6).forEach(tv=>s+=svgText(x(tv),H-padB+14,fmtCur(tv,p.c,0),8.5,"#4a5a70","middle"));
+  svg.innerHTML=s;
+  stats.innerHTML =
+    `<div>Simulations<b>${n.toLocaleString("en-US")}</b></div>`+
+    `<div>p10<b>${fmtCur(p10,p.c)}</b></div>`+
+    `<div>Median IV<b>${fmtCur(p50,p.c)}</b></div>`+
+    `<div>p90<b>${fmtCur(p90,p.c)}</b></div>`+
+    `<div class="pgood">P(IV &gt; price)<b>${(probUV*100).toFixed(0)}%</b></div>`+
+    `<div class="pgood">P(clears ${(p.mos*100).toFixed(0)}% MoS)<b>${(probMoS*100).toFixed(0)}%</b></div>`;
+}
+
+/* ============================ MONTE CARLO ENGINE ============================ */
+function tri(mode,delta){
+  if(delta<=0) return mode;
+  const u=Math.random(), v=Math.random();
+  return mode + delta*(u-v); // symmetric triangular on [mode-δ, mode+δ]
+}
+function runMonteCarlo(p){
+  const N=4000, out=new Array(N);
+  let k=0;
+  for(let i=0;i<N;i++){
+    const q={...p};
+    q.fcf = p.fcf*(1+tri(0,p.mc.dfcf));
+    q.g1  = tri(p.g1,p.mc.dg1);
+    q.gt  = Math.max(0,tri(p.gt,p.mc.dgt));
+    q.r   = tri(p.r,p.mc.dr);
+    if(q.tvmode==="gordon" && q.r<=q.gt+0.0025) q.r=q.gt+0.0025;
+    const iv=model(q).ivps;
+    if(isFinite(iv)) out[k++]=iv;
+  }
+  const a=out.slice(0,k).sort((x,y)=>x-y);
+  if(!a.length){ mcResult=null; return; }
+  const q=f=>a[Math.min(a.length-1,Math.floor(f*a.length))];
+  const lo=q(0.01), hi=q(0.99);
+  const bins=36, binW=(hi-lo)/bins||1, hist=new Array(bins).fill(0);
+  a.forEach(v=>{
+    const b=Math.min(bins-1,Math.max(0,Math.floor((v-lo)/binW)));
+    hist[b]++;
+  });
+  let uv=0, mos=0;
+  a.forEach(v=>{ if(v>p.px)uv++; if(v*(1-p.mos)>p.px)mos++; });
+  mcResult={hist,binLo:lo,binW,p10:q(0.10),p50:q(0.50),p90:q(0.90),
+            probUV:uv/a.length,probMoS:mos/a.length,n:a.length};
+}
+function scheduleMC(){
+  clearTimeout(mcTimer);
+  mcTimer=setTimeout(()=>{
+    const p=readInputs();
+    runMonteCarlo(p);
+    drawMonteCarlo(p);
+    const base=model(p);
+    drawFootballField(p,base,lastSensSpan,lastScenSpan);
+  },220);
+}
+
+/* ============================ SCENARIOS ============================ */
+let lastScenSpan=null;
+function renderScenarios(p,base){
+  const tb=g("sctb");
+  const ivs=[]; let totP=0;
+  scen.forEach(s=>{
+    const q={...p, g1:p.g1+s.dg1/100, gt:Math.max(0,p.gt+s.dgt/100)};
+    if(q.tvmode==="gordon" && q.r<=q.gt) q.gt=q.r-0.0025;
+    ivs.push({iv:model(q).ivps, p:s.p});
+    totP+=s.p;
+  });
+  if(tb.children.length!==scen.length){
+    // build once; afterwards only the IV cells update, so typing keeps focus
+    let html="";
+    scen.forEach((s,i)=>{
+      html+=`<tr><td class="name">${s.name}</td>
+        <td><input data-sc="${i}" data-f="dg1" type="number" step="0.5" value="${s.dg1}"></td>
+        <td><input data-sc="${i}" data-f="dgt" type="number" step="0.25" value="${s.dgt}"></td>
+        <td><input data-sc="${i}" data-f="p" type="number" step="5" min="0" value="${s.p}"></td>
+        <td class="mono" id="sc_iv_${i}"></td></tr>`;
+    });
+    tb.innerHTML=html;
+    tb.querySelectorAll("input").forEach(inp=>{
+      inp.addEventListener("input",()=>{
+        const i=+inp.dataset.sc, f=inp.dataset.f;
+        scen[i][f]=+inp.value||0;
+        persist();
+        render(false);
+      });
+    });
+  }
+  ivs.forEach((x,i)=>{
+    const cell=g("sc_iv_"+i);
+    cell.style.color = x.iv>=p.px ? "var(--up)" : "var(--down)";
+    cell.textContent = isFinite(x.iv) ? fmtCur(x.iv,p.c) : "—";
+  });
+  if(totP>0 && ivs.every(x=>isFinite(x.iv))){
+    const ev=ivs.reduce((s,x)=>s+x.iv*x.p,0)/totP;
+    g("sc_ev").textContent=fmtCur(ev,p.c);
+    const d=(ev/p.px-1)*100;
+    g("sc_evud").innerHTML=` <span style="color:${d>=0?"var(--up)":"var(--down)"}">(${pct(d)} vs price${totP!==100?" · probs normalised from "+totP+"%":""})</span>`;
+    const vals=ivs.map(x=>x.iv);
+    lastScenSpan=[Math.min(...vals),Math.max(...vals),ev];
+  } else { g("sc_ev").textContent="—"; g("sc_evud").textContent=""; lastScenSpan=null; }
+}
+
+/* ============================ SENSITIVITY ============================ */
+let lastSensSpan=null;
+function renderSensitivity(p){
+  const rBase=+g("r").value, gBase=+g("gt").value;
+  const rs=[-3,-2,-1,0,1,2,3].map(d=>rBase+d).filter(x=>x>=1);
+  const gs=[-1.5,-1,-0.5,0,0.5,1,1.5].map(d=>Math.max(0,gBase+d));
+  let minIV=Infinity,maxIV=-Infinity;
+  let sh="<tr><th class='corner'>r ＼ g∞</th>";
+  gs.forEach(gv=>{ sh+="<th class='hd'>"+gv.toFixed(2)+"%</th>"; });
+  sh+="</tr>";
+  rs.forEach(rv=>{
+    sh+="<tr><td class='hd'>"+rv.toFixed(2)+"%</td>";
+    gs.forEach(gv=>{
+      const pp={...p,r:rv/100,gt:gv/100};
+      const o=model(pp);
+      const isBase=(rv===rBase&&gv===gBase);
+      if(!o.valid||!isFinite(o.ivps)){ sh+="<td class='cell' style='color:var(--dimmer)'>—</td>"; return; }
+      minIV=Math.min(minIV,o.ivps); maxIV=Math.max(maxIV,o.ivps);
+      const ratio=o.ivps/p.px;
+      let bg,fg;
+      if(ratio>=1/(1-p.mos||1)) {bg="#0f2e1c";fg="var(--up)";}
+      else if(ratio>=1){bg="#0c2417";fg="var(--up)";}
+      else if(ratio>=0.8){bg="#2a1510";fg="var(--down)";}
+      else {bg="#2a0f0e";fg="var(--down)";}
+      sh+="<td class='cell"+(isBase?" base":"")+"' style='background:"+bg+";color:"+fg+"'>"+fmtCur(o.ivps,p.c,o.ivps>=100?0:1)+"</td>";
+    });
+    sh+="</tr>";
+  });
+  g("sens").innerHTML=sh;
+  lastSensSpan = isFinite(minIV)? [minIV,maxIV] : null;
+}
+
+/* ============================ VALIDATION ============================ */
+function renderChecks(p,out,C){
+  const chips=[];
+  const spread=(p.r-p.gt)*100;
+  if(p.tvmode==="gordon"){
+    if(p.r<=p.gt) chips.push(["err","r ≤ g∞ — terminal value undefined"]);
+    else if(spread<3) chips.push(["warn","r − g∞ = "+spread.toFixed(1)+"pp — terminal value hypersensitive"]);
+  }
+  if(out.valid){
+    const tvpct=out.pvT/out.ivps*100;
+    if(tvpct>75) chips.push(["warn",tvpct.toFixed(0)+"% of value sits in the terminal — the model is mostly a guess about forever"]);
+    if(p.tvmode==="gordon" && out.impliedExit>25) chips.push(["warn","Gordon TV = "+out.impliedExit.toFixed(0)+"× exit-year FCF — would you pay that multiple?"]);
+  }
+  if(p.g1>0.20 && p.n1>=8) chips.push(["warn",(p.g1*100).toFixed(0)+"% growth held for "+p.n1+" yrs is heroic — very few businesses in history have done it"]);
+  if(p.ds<-0.02) chips.push(["warn","Buybacks >2%/yr assumed forever — check FCF can actually fund them"]);
+  const age=daysSince(C.pxAsOf);
+  if(age>45) chips.push(["err","Price anchor is "+age+" days old — refresh before acting"]);
+  else if(age>7) chips.push(["warn","Price anchor "+age+" days old"]);
+  if(!chips.length) chips.push(["ok","All structural checks pass — the assumptions are yours to defend"]);
+  g("checks").innerHTML=chips.map(([c,t])=>`<span class="chip ${c}">${t}</span>`).join("");
+}
+
+/* ============================ FRESHNESS ============================ */
+function renderFresh(){
+  const C=COMPANIES[cur];
+  const age=daysSince(C.pxAsOf);
+  const pill=g("fr_pill");
+  let cls,txt;
+  if(age<=7){cls="ok";txt="FRESH · "+age+"d";}
+  else if(age<=45){cls="warn";txt="AGING · "+age+"d";}
+  else {cls="stale";txt="STALE · "+age+"d";}
+  pill.className="pill "+cls;
+  pill.textContent=txt;
+  g("fr_txt").innerHTML="<b style='color:var(--ink)'>"+C.t+"</b> · anchors: FY2025 filings · price as of <b style='color:var(--ink)'>"+C.pxAsOf+"</b> — refresh FCF / shares / net cash after each earnings report";
+  document.querySelectorAll(".tk").forEach((el,i)=>{
+    const a=daysSince(COMPANIES[i].pxAsOf);
+    const d=el.querySelector(".dot");
+    if(d) d.className="dot "+(a<=7?"ok":a<=45?"warn":"stale");
+  });
+}
+
+/* ============================ MAIN RENDER ============================ */
+function render(reMC=true){
+  const p=readInputs();
+  const C=COMPANIES[cur];
+
+  g("v_fcf").textContent=fmtB(p.fcf,p.c);
+  g("u_fcf").textContent="millions · "+p.c;
+  g("v_hair").textContent=(p.hair*100).toFixed(0)+"%";
+  g("v_g1").textContent=(p.g1*100).toFixed(1)+"%";
+  g("v_n1").textContent=p.n1+" yrs";
+  g("v_nf").textContent=p.nf===0?"off":p.nf+" yrs";
+  g("v_gt").textContent=(p.gt*100).toFixed(2)+"%";
+  g("v_r").textContent=(p.r*100).toFixed(2)+"%";
+  g("v_exitm").textContent=p.exitm.toFixed(1)+"×";
+  g("v_sh").textContent=p.sh.toLocaleString("en-US");
+  g("v_ds").textContent=(p.ds>=0?"+":"")+(p.ds*100).toFixed(2)+"%/yr";
+  g("v_nc").textContent=p.nc===0?"0":fmtCur(p.nc,p.c,0);
+  g("v_px").textContent=fmtCur(p.px,p.c);
+  g("v_mos").textContent=(p.mos*100).toFixed(0)+"%";
+  g("v_mcf").textContent=(p.mc.dfcf*100).toFixed(0)+"%";
+  g("v_mg1").textContent=(p.mc.dg1*100).toFixed(1)+"pp";
+  g("v_mgt").textContent=(p.mc.dgt*100).toFixed(2)+"pp";
+  g("v_mr").textContent=(p.mc.dr*100).toFixed(2)+"pp";
+  g("exitwrap").classList.toggle("hidden",p.tvmode!=="exit");
+
+  g("h_name").textContent=C.name;
+  g("h_cur").textContent=p.c;
+
+  const out=model(p);
+
+  g("o_iv").textContent=out.valid?fmtCur(out.ivps,p.c):"—";
+  g("o_px").textContent=fmtCur(p.px,p.c);
+  const ud=out.valid?(out.ivps/p.px-1)*100:NaN;
+  const udEl=g("o_ud");
+  udEl.textContent=out.valid?pct(ud):"—";
+  udEl.style.color=ud>=0?"var(--up)":"var(--down)";
+  g("o_buy").textContent=out.valid?fmtCur(out.ivps*(1-p.mos),p.c):"—";
+
+  const b=g("o_badge");
+  if(out.valid){
+    if(ud>=p.mos*100){b.className="badge up";b.textContent="CLEARS "+(p.mos*100).toFixed(0)+"% MoS";}
+    else if(ud>=0){b.className="badge up";b.textContent="MODEST UPSIDE";}
+    else if(ud>=-15){b.className="badge fair";b.textContent="ROUGHLY FAIR";}
+    else{b.className="badge dn";b.textContent="OVERVALUED";}
+  } else {b.className="badge fair";b.textContent="CHECK INPUTS";}
+
+  g("o_pve").textContent=fmtCur(out.pvE,p.c);
+  g("o_pvt").textContent=out.valid?fmtCur(out.pvT,p.c):"—";
+  g("o_nc").textContent=fmtCur(out.ncps,p.c);
+  g("o_tvpct").innerHTML=out.valid?(out.pvT/out.ivps*100).toFixed(0)+"% <small>of value</small>":"—";
+  g("o_iem").textContent=p.tvmode==="gordon"
+    ?(isFinite(out.impliedExit)?out.impliedExit.toFixed(1)+"× FCF":"—")
+    :p.exitm.toFixed(1)+"× FCF";
+
+  const ig=impliedG1(p);
+  if(ig===null){
+    g("rv_big").innerHTML="r must exceed g∞ to reverse-solve.";
+    g("rv_cmp").textContent="";
+  } else {
+    let igTxt;
+    if(ig<=-0.499)igTxt="< −50%";
+    else if(ig>=0.999)igTxt="> 100%";
+    else igTxt=(ig*100).toFixed(1)+"%";
+    g("rv_big").innerHTML="At "+fmtCur(p.px,p.c)+", the market implies <b>"+igTxt+"</b> annual FCF growth through the explicit stage.";
+    let verdict;
+    if(ig>p.g1)verdict="That's <span class='hot'>higher</span> than your "+(p.g1*100).toFixed(1)+"% — the price is more optimistic than you are (your model reads it as expensive).";
+    else verdict="That's <span class='cool'>lower</span> than your "+(p.g1*100).toFixed(1)+"% — the price demands less than you expect (your model reads it as cheap).";
+    g("rv_cmp").innerHTML="Your stage-1 input: <b>"+(p.g1*100).toFixed(1)+"%</b> · Market-implied: <b>"+igTxt+"</b>. "+verdict;
+  }
+
+  g("o_note").innerHTML=C.note;
+  renderChecks(p,out,C);
+
+  let ph="";
+  out.rows.forEach(rw=>{
+    ph+="<tr><td>"+rw.t+"</td><td class='"+(rw.fade?"fade":"")+"'>"+(rw.g*100).toFixed(1)+"%</td><td>"+fmtB(rw.f,p.c)+"</td><td>"+rw.sh.toFixed(0)+"</td><td>"+fmtCur(rw.fps,p.c)+"</td><td>"+rw.df.toFixed(3)+"</td><td class='pv'>"+fmtCur(rw.pv,p.c)+"</td></tr>";
+  });
+  g("proj").innerHTML=ph;
+
+  renderSensitivity(p);
+  renderScenarios(p,out.valid?out:null);
+  if(out.valid){
+    drawFcfChart(p,out);
+    drawWaterfall(p,out);
+  } else {
+    g("ch_fcf").innerHTML=svgText(280,120,"invalid inputs",10,"#4a5a70","middle");
+    drawWaterfall(p,out);
+  }
+  drawFootballField(p,out,lastSensSpan,lastScenSpan);
+  renderFresh();
+  if(reMC) scheduleMC();
+}
+
+/* ============================ COMPANY LOADING ============================ */
+function loadCompany(i,useStore){
+  saveGuard=false;
+  cur=i;
+  const C=COMPANIES[i];
+  const saved=useStore&&store[C.t]?store[C.t].inputs:null;
+  if(saved){
+    applySnapshot(saved);
+  } else {
+    g("fcf").value=C.fcf; g("sh").value=C.sh; g("px").value=C.px;
+    g("g1").value=C.g1; g("nc").value=0; g("hair").value=D.hair;
+    g("n1").value=D.n1; g("nf").value=D.nf; g("gt").value=D.gt; g("r").value=D.r;
+    g("ds").value=D.ds; g("mos").value=D.mos; g("tvmode").value=D.tvmode; g("exitm").value=D.exitm;
+    g("mc_dfcf").value=D.mc_dfcf; g("mc_dg1").value=D.mc_dg1;
+    g("mc_dgt").value=D.mc_dgt; g("mc_dr").value=D.mc_dr;
+  }
+  document.querySelectorAll(".tk").forEach((el,idx)=>el.classList.toggle("on",idx===i));
+  saveGuard=true;
+  render();
+}
+
+/* ============================ WIRING ============================ */
+let saveGuard=true;
+const rail=g("rail");
+COMPANIES.forEach((C,i)=>{
+  const d=document.createElement("div");
+  d.className="tk";
+  d.innerHTML=C.t+"<small>"+C.cur+"</small><span class='dot'></span>";
+  d.onclick=()=>loadCompany(i,true);
+  rail.appendChild(d);
+});
+
+INPUT_IDS.forEach(id=>g(id).addEventListener("input",()=>{
+  if(saveGuard) saveCurrent();
+  render();
+}));
+
+g("reset").onclick=()=>{ delete store[COMPANIES[cur].t]; persist(); loadCompany(cur,false); };
+g("resetAll").onclick=()=>{
+  store={}; scen=SC_DEF.map(s=>({...s})); g("sctb").innerHTML=""; persist(); loadCompany(cur,false);
+};
+g("fr_btn").onclick=()=>{
+  COMPANIES[cur].pxAsOf=todayStr();
+  saveCurrent();
+  render(false);
+};
+g("quotesBtn").onclick=fetchQuotes;
+g("exportBtn").onclick=()=>{
+  saveCurrent();
+  const blob=new Blob([JSON.stringify({exported:todayStr(),store,scen},null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="gama-dcf-state-"+todayStr()+".json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+g("importBtn").onclick=()=>g("importFile").click();
+g("importFile").addEventListener("change",e=>{
+  const f=e.target.files[0]; if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{
+      const d=JSON.parse(rd.result);
+      if(d.store)store=d.store;
+      if(d.scen&&d.scen.length===3)scen=d.scen;
+      COMPANIES.forEach(C=>{ if(store[C.t]&&store[C.t].pxAsOf)C.pxAsOf=store[C.t].pxAsOf; });
+      g("sctb").innerHTML="";
+      persist();
+      loadCompany(cur,true);
+    }catch(err){ alert("Could not read that file — expected a JSON export from this workstation."); }
+  };
+  rd.readAsText(f);
+  e.target.value="";
+});
+
+/* ============================ BOOT ============================ */
+(async function(){
+  await restore();
+  loadCompany(0,true);
+})();
+</script>
+</body>
+</html>

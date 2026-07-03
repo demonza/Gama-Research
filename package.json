@@ -1,0 +1,16 @@
+{
+  "name": "gama-research-dcf",
+  "version": "2.1.0",
+  "description": "Gama Research — DCF Workstation. Express + Supabase + live quotes.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "express": "^4.19.2"
+  }
+}
